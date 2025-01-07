@@ -6,24 +6,31 @@ import (
 	"google.golang.org/grpc"
 )
 
-var _ v1.MyIpServiceServer = (*MyIpFinderGrpcServer)(nil)
+var _ v1.MyIpServiceServer = (*myIpFinderGrpcServer)(nil)
 
-type MyIpFinderGrpcServer struct {
+type myIpFinderGrpcServer struct {
 	Impl MyIPFinder
 }
 
-func (m *MyIpFinderGrpcServer) FindMyIP(ctx context.Context, request *v1.FindMyIPRequest) (*v1.FindMyIPResponse, error) {
-	//TODO implement me
-	panic("implement me")
+func (m *myIpFinderGrpcServer) FindMyIP(ctx context.Context, request *v1.FindMyIPRequest) (*v1.FindMyIPResponse, error) {
+	ip, location, region, err := m.Impl.GetMyIp()
+	if err != nil {
+		return nil, err
+	}
+	resp := &v1.FindMyIPResponse{
+		IpAddress: ip,
+		Location:  location,
+		Region:    region,
+	}
+	return resp, nil
 }
 
-var _ v1.MyIpServiceClient = (*MyIpFinderGrpcClient)(nil)
+var _ v1.MyIpServiceClient = (*myIpFinderGrpcClient)(nil)
 
-type MyIpFinderGrpcClient struct {
+type myIpFinderGrpcClient struct {
 	client v1.MyIpServiceClient
 }
 
-func (m *MyIpFinderGrpcClient) FindMyIP(ctx context.Context, in *v1.FindMyIPRequest, opts ...grpc.CallOption) (*v1.FindMyIPResponse, error) {
-	//TODO implement me
-	panic("implement me")
+func (m *myIpFinderGrpcClient) FindMyIP(ctx context.Context, in *v1.FindMyIPRequest, opts ...grpc.CallOption) (*v1.FindMyIPResponse, error) {
+	return m.client.FindMyIP(ctx, in, opts...)
 }

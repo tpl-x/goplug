@@ -10,7 +10,7 @@ import (
 var _ plugin.GRPCPlugin = (*MyIpFindPlugin)(nil)
 
 type MyIPFinder interface {
-	GetMyIp(ip string) (location, region string, err error)
+	GetMyIp() (ip, location, region string, err error)
 }
 
 type MyIpFindPlugin struct {
@@ -22,10 +22,10 @@ type MyIpFindPlugin struct {
 }
 
 func (m *MyIpFindPlugin) GRPCServer(broker *plugin.GRPCBroker, server *grpc.Server) error {
-	v1.RegisterMyIpServiceServer(server, &MyIpFinderGrpcServer{Impl: m.Impl})
+	v1.RegisterMyIpServiceServer(server, &myIpFinderGrpcServer{Impl: m.Impl})
 	return nil
 }
 
 func (m *MyIpFindPlugin) GRPCClient(ctx context.Context, broker *plugin.GRPCBroker, conn *grpc.ClientConn) (interface{}, error) {
-	return &MyIpFinderGrpcClient{client: v1.NewMyIpServiceClient(conn)}, nil
+	return &myIpFinderGrpcClient{client: v1.NewMyIpServiceClient(conn)}, nil
 }

@@ -11,8 +11,8 @@ var _ v1.MyIPFinder = (*myIpFinderImpl)(nil)
 type myIpFinderImpl struct {
 }
 
-func (m myIpFinderImpl) GetMyIp(ip string) (location, region string, err error) {
-	return "", "", err
+func (m myIpFinderImpl) GetMyIp() (ip, location, region string, err error) {
+	return "", "", "", err
 }
 
 func main() {

@@ -1,53 +1,66 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"github.com/hashicorp/go-plugin"
-	"github.com/hashicorp/go-plugin/examples/grpc/shared"
 	"github.com/tpl-x/goplug/internal/pkg/pluginopt"
 	v1 "github.com/tpl-x/goplug/internal/pkg/plugins/myip/v1"
-	"io"
 	"log"
-	"os"
+	"net/http"
 	"os/exec"
 )
 
-func serve() error {
+type ipResponse struct {
+	IPAddress string `json:"ip_address"`
+	Location  string `json:"location"`
+	Region    string `json:"region"`
+}
+
+func main() {
 	// We're a host. Start by launching the plugin process.
 	client := plugin.NewClient(&plugin.ClientConfig{
 		HandshakeConfig: pluginopt.Handshake,
 		Plugins:         pluginopt.PluginMap,
-		Cmd:             exec.Command("sh", "-c", os.Getenv("KV_PLUGIN")),
+		Cmd:             exec.Command("plugins/findmyIp"),
 		AllowedProtocols: []plugin.Protocol{
-			plugin.ProtocolGRPC},
+			plugin.ProtocolGRPC,
+		},
 	})
 	defer client.Kill()
 
 	// Connect via RPC
 	rpcClient, err := client.Client()
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	// Request the plugin
 	raw, err := rpcClient.Dispense("my_ip_finder_grpc")
 	if err != nil {
-		return err
+		panic(err)
 	}
-	if ipFinder, ok := raw.(v1.MyIPFinder); ok {
-
-	}
-	return nil
-}
-
-func main() {
-	// We don't want to see the plugin logs.
-	log.SetOutput(io.Discard)
-
-	if err := serve(); err != nil {
-		fmt.Printf("error: %+v\n", err)
-		os.Exit(1)
+	ipFinder, ok := raw.(v1.MyIPFinder)
+	if !ok {
+		panic("not a ip find plugin")
 	}
 
-	os.Exit(0)
+	mux := http.NewServeMux()
+	mux.Handle("GET /ip", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ip, location, region, err := ipFinder.GetMyIp()
+		if err != nil {
+			log.Println("failed to get ip", err)
+			return
+		}
+		resp := ipResponse{
+			IPAddress: ip,
+			Location:  location,
+			Region:    region,
+		}
+		err = json.NewEncoder(w).Encode(resp)
+		if err != nil {
+			log.Println("failed to encode to response", err)
+			return
+		}
+	}))
+
 }
