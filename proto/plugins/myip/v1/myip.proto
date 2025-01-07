@@ -1,0 +1,16 @@
+syntax = "proto3";
+package plugins.myip.v1;
+
+option go_package = "github.com/tpl-x/goplug/api/myip/v1;v1";
+
+message FindMyIPRequest{
+  string ip_address = 1;
+}
+message FindMyIPResponse{
+  string location = 1;
+}
+
+// MyIpService is a service to return ip information
+service MyIpService{
+    rpc FindMyIP(FindMyIPRequest) returns (FindMyIPResponse);
+}
