@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	github.com/hashicorp/go-plugin v1.6.3
-	google.golang.org/grpc v1.72.1
+	google.golang.org/grpc v1.72.2
 )
 
 require (
